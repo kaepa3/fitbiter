@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -52,6 +53,49 @@ func (app *App) handleCallback(w http.ResponseWriter, r *http.Request) {
 		log.Println("DB保存失敗:", err)
 		return
 	}
+	http.Redirect(w, r, "http://localhost:5173", http.StatusTemporaryRedirect)
+}
 
-	fmt.Fprintf(w, "保存完了！これでもうブラウザ認証は不要です。")
+func (a *App) getAuthStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var auth FitbitAuth
+	// DBに1件でもレコードがあるか確認
+	result := a.DB.First(&auth)
+
+	status := map[string]interface{}{
+		"is_authenticated": result.Error == nil,
+	}
+
+	if result.Error == nil {
+		status["updated_at"] = auth.UpdatedAt
+	}
+
+	json.NewEncoder(w).Encode(status)
+}
+
+func (a *App) getActivities(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// クエリパラメータの取得
+	from := r.URL.Query().Get("from")
+	to := r.URL.Query().Get("to")
+
+	// バリデーション（簡易版）
+	if from == "" || to == "" {
+		http.Error(w, "from and to parameters are required", http.StatusBadRequest)
+		return
+	}
+
+	var activities []DailyActivity
+	// PostgreSQLに対して期間指定でクエリを実行
+	// "date" カラムが from 以上 to 以下 のデータを取得
+	result := a.DB.Where("date BETWEEN ? AND ?", from, to).Order("date asc").Find(&activities)
+
+	if result.Error != nil {
+		http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(activities)
 }

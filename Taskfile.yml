@@ -1,0 +1,33 @@
+# Taskfile.yml
+version: '3'
+
+vars:
+  DB_DSN_LOCAL: "host=localhost user=user password=password dbname=fitbit_db port=5432 sslmode=disable"
+
+tasks:
+  db:
+    desc: DB(PostgreSQL)を起動
+    cmds:
+      - docker-compose up -d db
+
+  backend:
+    desc: Goバックエンドを起動
+    dir: backend
+    env:
+      DB_DSN: "{{.DB_DSN_LOCAL}}"
+    cmds:
+      - go run .
+
+  frontend:
+    desc: Viteフロントエンドを起動
+    dir: frontend
+    cmds:
+      - npm run dev
+
+  run:
+    desc: 全サービスを起動
+    deps: [db]
+    cmds:
+      # 引数全体をダブルクォートで囲み、内部のシングルクォートと干渉しないように修正
+      - 'powershell -Command "Start-Process powershell -ArgumentList \"task backend\""'
+      - 'powershell -Command "Start-Process powershell -ArgumentList \"task frontend\""'

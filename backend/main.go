@@ -36,12 +36,15 @@ func main() {
 	} else {
 		fmt.Println("トークンがありません。ブラウザで http://localhost:8080/login にアクセスしてください。")
 	}
-
+	mux := http.NewServeMux()
 	// 1. 認可画面へのリダイレクト
-	http.HandleFunc("/login", app.handleLogin)
+	mux.HandleFunc("/login", app.handleLogin)
 	// 2. コールバックの処理
-	http.HandleFunc("/callback", app.handleCallback)
-	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/callback", app.handleCallback)
+	mux.HandleFunc("/api/auth/status", app.getAuthStatus)
+	mux.HandleFunc("/api/activities", app.getActivities)
+	//------------------------------------------------------------------------
+	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		ts := conf.TokenSource(ctx, &oauth2.Token{
 			AccessToken:  auth.AccessToken,
@@ -51,13 +54,13 @@ func main() {
 		today := time.Now().Format("2006-01-02")
 		app.fetchOneDayData(ctx, ts, today)
 	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var activities []DailyActivity
 		db.Order("date desc").Limit(30).Find(&activities) // 直近1週間分
 		tmpl := template.Must(template.ParseFiles("templates/index.html"))
 		tmpl.Execute(w, activities)
 	})
-	http.HandleFunc("/sync", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/sync", func(w http.ResponseWriter, r *http.Request) {
 		var a FitbitAuth
 		db.First(&a, 1)
 		ts := conf.TokenSource(r.Context(), &oauth2.Token{
@@ -69,6 +72,21 @@ func main() {
 		app.fetchRangeData(r.Context(), ts, start, end)
 		fmt.Fprint(w, "過去1ヶ月分の同期を開始しました（ログを確認してください）")
 	})
+	//------------------------------------------------------------------------
+
+	// CORSミドルウェア
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // フロントエンドのURL
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		mux.ServeHTTP(w, r)
+	})
+
 	fmt.Println("Server started at http://localhost:8080/login")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
