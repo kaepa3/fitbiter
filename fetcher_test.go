@@ -4,7 +4,8 @@ package main
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert" // アサーションライブラリ（あると便利です）
+	"github.com/glebarez/sqlite"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
