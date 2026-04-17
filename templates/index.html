@@ -12,62 +12,66 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Weekly Activity</h1>
+<div class="container">
+        <h1>Fitbit Dashboard</h1>
+        
+        <h3>🏃 Activity (Steps & Calories)</h3>
         <canvas id="activityChart"></canvas>
+
+        <h3 style="margin-top: 40px;">🛌 Recovery (Sleep & Resting HR)</h3>
+        <canvas id="recoveryChart"></canvas>
     </div>
 
     <script>
-        // Go のテンプレートからデータを流し込む
-        // . は Go 側で渡された []DailyActivity スライスを指す
+        // Go から 4つのデータをすべて受け取る
         const rawData = [
             {{range .}}
-            { date: "{{.Date}}", steps: {{.Steps}}, calories: {{.Calories}} },
+            { 
+                date: "{{.Date}}", 
+                steps: {{.Steps}}, 
+                calories: {{.Calories}},
+                sleepHours: {{.SleepMinutes}} / 60, // グラフで見やすいように時間単位に変換
+                heartRate: {{.HeartRateRest}}
+            },
             {{end}}
-        ].reverse(); // 日付順（昇順）に並び替え
+        ].reverse(); 
 
         const labels = rawData.map(d => d.date);
-        const stepsData = rawData.map(d => d.steps);
-        const caloriesData = rawData.map(d => d.calories);
 
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar', // 棒グラフ
+        // --- 1. Activity Chart (歩数とカロリー) ---
+        new Chart(document.getElementById('activityChart').getContext('2d'), {
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Steps',
-                        data: stepsData,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Calories',
-                        data: caloriesData,
-                        type: 'line', // カロリーは折れ線グラフで重ねる
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        yAxisID: 'y1',
-                    }
+                    { label: 'Steps', data: rawData.map(d => d.steps), backgroundColor: 'rgba(54, 162, 235, 0.5)', yAxisID: 'y' },
+                    { label: 'Calories', data: rawData.map(d => d.calories), type: 'line', borderColor: 'rgba(255, 99, 132, 1)', yAxisID: 'y1' }
                 ]
             },
             options: {
                 responsive: true,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        position: 'left',
-                        title: { display: true, text: 'Steps' }
-                    },
-                    y1: {
-                        beginAtZero: true,
-                        position: 'right',
-                        title: { display: true, text: 'Calories' },
-                        grid: { drawOnChartArea: false } // 右側のグリッド線を消す
-                    }
+                    y: { position: 'left', title: { display: true, text: 'Steps' } },
+                    y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'kcal' } }
+                }
+            }
+        });
+
+        // --- 2. Recovery Chart (睡眠時間と心拍数) ---
+        new Chart(document.getElementById('recoveryChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Sleep (Hours)', data: rawData.map(d => d.sleepHours), backgroundColor: 'rgba(75, 192, 192, 0.5)', yAxisID: 'y' },
+                    { label: 'Resting HR', data: rawData.map(d => d.heartRate), type: 'line', borderColor: 'rgba(153, 102, 255, 1)', yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { position: 'left', title: { display: true, text: 'Hours' }, suggestedMax: 10 },
+                    y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'bpm' }, suggestedMin: 40, suggestedMax: 100 }
                 }
             }
         });

@@ -12,34 +12,30 @@ import (
 	"golang.org/x/oauth2/fitbit"
 )
 
-var conf = &oauth2.Config{
-	Scopes:      []string{"activity", "heartrate", "sleep", "profile"},
-	RedirectURL: "http://localhost:8080/callback",
-	Endpoint:    fitbit.Endpoint,
-}
-
 // .envを呼び出します。
-func loadEnv() {
+func initOAuth() *oauth2.Config {
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Printf("読み込み出来ませんでした: %v", err)
 	}
 
-	// .envの SAMPLE_MESSAGEを取得して、messageに代入します。
-	clientID := os.Getenv("CLIENT_ID")
-	clientSecret := os.Getenv("CLIENT_SECRET")
-	conf.ClientID = clientID
-	conf.ClientSecret = clientSecret
+	return &oauth2.Config{
+		ClientID:     os.Getenv("CLIENT_ID"),
+		ClientSecret: os.Getenv("CLIENT_SECRET"),
+		Scopes:       []string{"activity", "heartrate", "sleep", "profile"},
+		RedirectURL:  "http://localhost:8080/callback",
+		Endpoint:     fitbit.Endpoint,
+	}
 }
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
-	url := conf.AuthCodeURL("state")
+func (app *App) handleLogin(w http.ResponseWriter, r *http.Request) {
+	url := app.Conf.AuthCodeURL("state")
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-func handleCallback(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
-	token, err := conf.Exchange(context.Background(), code)
+	token, err := app.Conf.Exchange(context.Background(), code)
 	if err != nil {
 		http.Error(w, "トークン交換失敗", http.StatusInternalServerError)
 		return
@@ -52,7 +48,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		Expiry:       token.Expiry,
 	}
 
-	if err := db.Save(&auth).Error; err != nil {
+	if err := app.DB.Save(&auth).Error; err != nil {
 		log.Println("DB保存失敗:", err)
 		return
 	}

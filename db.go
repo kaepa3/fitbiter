@@ -8,8 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
-
 // トークン情報を保存する構造体
 type FitbitAuth struct {
 	ID           uint      `gorm:"primaryKey"`
@@ -31,12 +29,13 @@ type DailyActivity struct {
 	UpdatedAt     time.Time
 }
 
-func initDB() {
+// DBの初期化
+func initDB() *gorm.DB {
 	dsn := "host=localhost user=user password=password dbname=fitbit_db port=5432 sslmode=disable"
-	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("DB接続失敗:", err)
 	}
 	db.AutoMigrate(&FitbitAuth{}, &DailyActivity{})
+	return db
 }
