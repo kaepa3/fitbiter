@@ -20,14 +20,14 @@ type FitbitAuth struct {
 
 // 日ごとの活動量を保存するテーブル
 type DailyActivity struct {
-	ID            uint    `gorm:"primaryKey"`
-	Date          string  `gorm:"uniqueIndex"`
-	Steps         int     // 歩数
-	Calories      int     // 消費カロリー
-	Distance      float64 // 距離(km)
-	HeartRateRest int     // 安静時心拍数
-	SleepMinutes  int     // 睡眠時間(分)
-	UpdatedAt     time.Time
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	Date          string    `gorm:"uniqueIndex" json:"date"`
+	Steps         int       `json:"steps"`
+	Calories      int       `json:"calories"`
+	Distance      float64   `json:"distance"`
+	HeartRateRest int       `json:"heart_rate_rest"`
+	SleepMinutes  int       `json:"sleep_minutes"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // DBの初期化
