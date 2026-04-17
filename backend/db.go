@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -31,7 +32,12 @@ type DailyActivity struct {
 
 // DBの初期化
 func initDB() *gorm.DB {
-	dsn := "host=localhost user=user password=password dbname=fitbit_db port=5432 sslmode=disable"
+	// 環境変数 DB_DSN から接続情報を取得する
+	dsn := os.Getenv("DB_DSN")
+	if dsn == "" {
+		// 環境変数がない場合はローカル（localhost）をデフォルトにする
+		dsn = "host=localhost user=user password=password dbname=fitbit_db port=5432 sslmode=disable"
+	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("DB接続失敗:", err)

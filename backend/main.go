@@ -53,7 +53,7 @@ func main() {
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var activities []DailyActivity
-		db.Order("date desc").Limit(7).Find(&activities) // 直近1週間分
+		db.Order("date desc").Limit(30).Find(&activities) // 直近1週間分
 		tmpl := template.Must(template.ParseFiles("templates/index.html"))
 		tmpl.Execute(w, activities)
 	})
