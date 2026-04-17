@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Fitbit Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        canvas { width: 100% !important; height: 400px !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weekly Activity</h1>
+        <canvas id="activityChart"></canvas>
+    </div>
+
+    <script>
+        // Go のテンプレートからデータを流し込む
+        // . は Go 側で渡された []DailyActivity スライスを指す
+        const rawData = [
+            {{range .}}
+            { date: "{{.Date}}", steps: {{.Steps}}, calories: {{.Calories}} },
+            {{end}}
+        ].reverse(); // 日付順（昇順）に並び替え
+
+        const labels = rawData.map(d => d.date);
+        const stepsData = rawData.map(d => d.steps);
+        const caloriesData = rawData.map(d => d.calories);
+
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar', // 棒グラフ
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Steps',
+                        data: stepsData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Calories',
+                        data: caloriesData,
+                        type: 'line', // カロリーは折れ線グラフで重ねる
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: { display: true, text: 'Steps' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        title: { display: true, text: 'Calories' },
+                        grid: { drawOnChartArea: false } // 右側のグリッド線を消す
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
