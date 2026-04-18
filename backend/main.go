@@ -56,17 +56,8 @@ func main() {
 	mux.HandleFunc("/api/auth/status", app.getAuthStatus)
 	mux.HandleFunc("/api/activities", app.getActivities)
 	mux.HandleFunc("/api/activities/today/sync", app.syncTodayHandler)
+	mux.HandleFunc("/api/activities/all/sync", app.syncAllHistoryHandler)
 	//------------------------------------------------------------------------
-	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.Background()
-		ts := conf.TokenSource(ctx, &oauth2.Token{
-			AccessToken:  auth.AccessToken,
-			RefreshToken: auth.RefreshToken,
-			Expiry:       auth.Expiry,
-		})
-		today := time.Now().Format("2006-01-02")
-		app.fetchOneDayData(ctx, ts, today)
-	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var activities []DailyActivity
 		db.Order("date desc").Limit(30).Find(&activities) // 直近1週間分

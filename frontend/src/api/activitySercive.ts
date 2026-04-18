@@ -26,6 +26,7 @@ export interface SyncResponse {
 // 全取得のレスポンス
 export interface SyncAllHistoryResponse {
   status: string;
+  total_synced: string;
 }
 
 export const activityService = {

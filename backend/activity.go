@@ -39,6 +39,66 @@ func (a *App) getActivities(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(activities)
 }
 
+// 履歴前取得
+func (a *App) syncAllHistoryHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ts, err := a.getAuthenticatedSource(ctx)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	totalSynced := 0
+	// 今日から開始
+	currentEnd := time.Now()
+
+	for {
+		// 30日前を計算
+		currentStart := currentEnd.AddDate(0, 0, -30)
+
+		startStr := currentStart.Format("2006-01-02")
+		endStr := currentEnd.Format("2006-01-02")
+
+		log.Printf("[BULK] Syncing: %s to %s", startStr, endStr)
+
+		// 指定期間のデータを取得
+		count, err := a.fetchRangeData(ctx, ts, startStr, endStr)
+		if err != nil {
+			log.Printf("[ERROR] Bulk sync failed at %s: %v", startStr, err)
+			break
+		}
+
+		// カロリーはBMRで下限（1777等）があるため、
+		// 保存されたデータの「歩数の合計」が0なら、そこが利用開始前と判断する
+		var totalSteps int
+		a.DB.Model(&DailyActivity{}).
+			Where("date BETWEEN ? AND ?", startStr, endStr).
+			Select("SUM(steps)").
+			Row().Scan(&totalSteps)
+
+		if totalSteps == 0 {
+			log.Printf("[FINISH] 指定期間 %s 〜 %s の歩数が0のため、同期を終了します", startStr, endStr)
+			break
+		}
+
+		totalSynced += count
+
+		// 次のループのために、終了日をさらに30日前にずらす
+		currentEnd = currentStart.AddDate(0, 0, -1)
+
+		// 🚨 安全策: あまりに古いデータ（例: 10年以上前）やループ回数に上限を設けるのもあり
+		if currentEnd.Year() < 2010 {
+			break
+		}
+
+		// Fitbit APIのレートリミットを考慮し、少し待機を入れるとより安全
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status":"success", "total_synced": %d}`, totalSynced)
+}
+
 func (a *App) syncTodayHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -110,34 +170,46 @@ func (app *App) fetchOneDayData(ctx context.Context, ts oauth2.TokenSource, date
 }
 
 // 過去の特定期間のデータを一気に取得・保存する（Appのメソッドとして定義）
-func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start string, end string) {
+func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start string, end string) (int, error) {
 	client := oauth2.NewClient(ctx, ts)
+
+	// 取得チェック
+	var existingDates []string
+	app.DB.Model(&DailyActivity{}).
+		Where("date BETWEEN ? AND ?", start, end).
+		Pluck("date", &existingDates)
+
+	// 全ての日付がすでに存在していれば、APIを叩かずに終了
+	// 30日分すべて揃っているかチェック（簡略化のため件数で比較）
+	if len(existingDates) >= 31 { // 30日+α
+		return 0, nil
+	}
 
 	// 1. 歩数（Steps）の取得
 	stepsURL := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/steps/date/%s/%s.json", start, end)
 	var stepsRes FitbitStepsRangeResponse
 	if err := fetchFitbitAPI(client, stepsURL, &stepsRes); err != nil {
-		log.Printf("歩数期間データの取得失敗: %v", err)
+		return 0, fmt.Errorf("歩数期間データの取得失敗: %v", err)
 	}
 
 	// 2. カロリー（Calories）の取得
 	calURL := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/calories/date/%s/%s.json", start, end)
 	var calRes FitbitCaloriesRangeResponse
 	if err := fetchFitbitAPI(client, calURL, &calRes); err != nil {
-		log.Printf("カロリー期間データの取得失敗: %v", err)
+		return 0, fmt.Errorf("カロリー期間データの取得失敗: %v", err)
 	}
 	// 3. 安静時心拍数の取得
 	hrURL := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%s/%s.json", start, end)
 	var hrRes FitbitHeartRangeResponse
 	if err := fetchFitbitAPI(client, hrURL, &hrRes); err != nil {
-		log.Printf("心拍数期間データの取得失敗: %v", err)
+		return 0, fmt.Errorf("心拍数期間データの取得失敗: %v", err)
 	}
 
 	// 4. 睡眠の取得 (バージョン1.2)
 	sleepURL := fmt.Sprintf("https://api.fitbit.com/1.2/user/-/sleep/date/%s/%s.json", start, end)
 	var sleepRes FitbitSleepRangeResponse
 	if err := fetchFitbitAPI(client, sleepURL, &sleepRes); err != nil {
-		log.Printf("睡眠期間データの取得失敗: %v", err)
+		return 0, fmt.Errorf("睡眠期間データの取得失敗: %v", err)
 	}
 
 	// 3. データを日付ごとに整理するためのマップを作成
@@ -199,11 +271,10 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 			// 更新対象に heart_rate_rest と sleep_minutes を追加
 			DoUpdates: clause.AssignmentColumns([]string{"steps", "calories", "heart_rate_rest", "sleep_minutes", "updated_at"}),
 		}).Create(&updateTargets).Error
-
 		if err != nil {
-			log.Println("期間データの一括保存失敗:", err)
-		} else {
-			fmt.Printf("✅ 過去データ（%s 〜 %s）の同期完了: %d件処理しました\n", start, end, len(updateTargets))
+			return 0, fmt.Errorf("期間データの一括保存失敗:", err)
 		}
 	}
+	// 実際に保存・更新した日数を返す
+	return len(updateTargets), nil
 }
