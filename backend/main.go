@@ -39,10 +39,12 @@ func main() {
 	mux := http.NewServeMux()
 	// 1. 認可画面へのリダイレクト
 	mux.HandleFunc("/login", app.handleLogin)
+	mux.HandleFunc("/api/auth/login", app.handleLogin)
 	// 2. コールバックの処理
 	mux.HandleFunc("/callback", app.handleCallback)
 	mux.HandleFunc("/api/auth/status", app.getAuthStatus)
 	mux.HandleFunc("/api/activities", app.getActivities)
+	mux.HandleFunc("/api/activities/today/sync", app.syncTodayHandler)
 	//------------------------------------------------------------------------
 	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

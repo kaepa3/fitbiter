@@ -79,13 +79,23 @@ const fetchActivityData = async (dataRange: { from: string; to: string }) => {
         isLoading.value = false
     }
 }
+
+// 今日のデータを取得する
 const handleSyncRequest = async () => {
 
     isLoading.value = true;
     try {
+        const response = await fetch(`${API_BASE_URL}/api/activities/today/sync`);
+        if (response.status === 401) {
+            window.location.href = `${API_BASE_URL}/api/auth/login`;
+            return;
+        }
+        if (!response.ok) throw new Error("Sync failed");
+        await fetchActivityData({
+            from: lastWeek.toISOString().split('T')[0],
+            to: today.toISOString().split('T')[0]
+        })
         console.log("Sync request received in App.vue");
-
-
     } catch (err) {
         console.error(err);
     } finally {
