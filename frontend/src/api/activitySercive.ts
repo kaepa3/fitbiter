@@ -23,6 +23,10 @@ export interface AuthStatus {
 export interface SyncResponse {
   status: string;
 }
+// 全取得のレスポンス
+export interface SyncAllHistoryResponse {
+  status: string;
+}
 
 export const activityService = {
   // AuthStatusの取得
@@ -40,5 +44,10 @@ export const activityService = {
   async syncToday(): Promise<{ status: string }> {
     // 戻り値が必要なくても apiFetch を通すことで、エラーチェックが自動で行われる
     return apiFetch<{ status: string }>(`/api/activities/today/sync`);
+  },
+  // 全データの取得
+  async syncAllHistory(): Promise<SyncAllHistoryResponse> {
+    // 戻り値が必要なくても apiFetch を通すことで、エラーチェックが自動で行われる
+    return apiFetch<SyncAllHistoryResponse>(`/api/activities/all/sync`);
   }
 };

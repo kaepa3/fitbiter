@@ -2,6 +2,10 @@
 defineProps<{
   isAuthenticated: boolean
   lastUpdated: string
+  currentView: 'dashboard' | 'maintenance'
+}>()
+defineEmits<{
+  (e: 'update:currentView', view: 'dashboard' | 'maintenance'): void
 }>()
 </script>
 
@@ -33,7 +37,21 @@ defineProps<{
           {{ lastUpdated || '---' }}
         </span>
       </div>
+      <nav class="flex gap-2">
+        <template v-if="currentView === 'maintenance'">
+          <button @click="$emit('update:currentView', 'dashboard')"
+            class="px-4 py-2 rounded-lg font-bold transition-all bg-blue-600 text-white hover:bg-blue-700">
+            Dashboard
+          </button>
+        </template>
 
+        <template v-else-if="currentView === 'dashboard'">
+          <button @click="$emit('update:currentView', 'maintenance')"
+            class="px-4 py-2 rounded-lg font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+            Maintenance
+          </button>
+        </template>
+      </nav>
     </div>
   </header>
 </template>
