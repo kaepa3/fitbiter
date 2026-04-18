@@ -23,11 +23,24 @@ const handleDateChange = (val: [Date, Date]) => {
             Select Period
         </label>
         <div class="relative">
-            <VueDatePicker :enable-time-picker="false" v-model="range" range dark :auto-apply="true"
-                @update:model-value="handleDateChange" placeholder="Select Range" format="yyyy/MM/dd" />
+            <VueDatePicker v-model="range" range dark :auto-apply="true" :time-config="{ enableTimePicker: false }"
+                :formats="{ input: 'yyyy/MM/dd' }" @update:model-value="handleDateChange" placeholder="Select Range" />
             <div v-if="isLoading" class="absolute -right-8 top-2">
                 <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
             </div>
         </div>
     </div>
 </template>
+<style scoped>
+/* ライブラリ内部の入力要素をターゲットにする */
+:deep(.dp__input) {
+    text-align: center;
+    /* 左側のアイコンと文字が重ならないようにパディングを調整 */
+    padding-inline-start: 35px;
+}
+
+/* プレースホルダー（Select Range）も中央寄せにする場合 */
+:deep(.dp__input::placeholder) {
+    text-align: center;
+}
+</style>
