@@ -8,24 +8,33 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
 // アプリケーション全体で使い回す「依存関係」をまとめた構造体
 type App struct {
-	DB   *gorm.DB
-	Conf *oauth2.Config
+	DB     *gorm.DB
+	Conf   *oauth2.Config
+	AppCfg *Config
 }
 
 func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Printf("読み込み出来ませんでした: %v", err)
+	}
+
 	db := initDB()
 	conf := initOAuth()
+	appCfg := appCfgInit()
 
 	// 2. Appインスタンスの生成
 	app := &App{
-		DB:   db,
-		Conf: conf,
+		DB:     db,
+		Conf:   conf,
+		AppCfg: appCfg,
 	}
 	// 起動時にDBを確認
 	var auth FitbitAuth
