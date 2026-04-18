@@ -4,7 +4,7 @@ import TheHeader from './components/TheHeader.vue'
 import ActivityChart from './components/ActivityChart.vue'
 import ActivitySearchForm from './components/ActivitySearchForm.vue'
 import SimpleBarChart from './components/SimpleBarChart.vue'
-import { activityService } from './api/activitySercive.ts'
+import { activityService, type DailyActivity } from './api/activitySercive.ts'
 
 
 // 状態管理用のリアクティブ変数
@@ -49,7 +49,7 @@ onMounted(async () => {
 })
 
 // 引数を受け取る形に変更
-const activityData = ref<any[]>([]) // 取得したデータを格納
+const activityData = ref<DailyActivity[]>([]) // 取得したデータを格納
 const fetchActivityData = async (dataRange: { from: Date; to: Date }) => {
   isLoading.value = true
   try {

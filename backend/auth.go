@@ -118,6 +118,8 @@ type tokenUpdateSource struct {
 }
 
 func (s *tokenUpdateSource) Token() (*oauth2.Token, error) {
+	s.app.Mu.Lock()
+	defer s.app.Mu.Unlock()
 	// 1. リフレッシュ前のトークン状態を確認（セキュリティのため末尾のみ）
 	var current FitbitAuth
 	s.app.DB.First(&current, 1)

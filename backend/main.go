@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"text/template"
 	"time"
 
@@ -18,6 +19,7 @@ type App struct {
 	DB     *gorm.DB
 	Conf   *oauth2.Config
 	AppCfg *Config
+	Mu     sync.Mutex // リフレッシュ処理排他用のMutexを追加
 }
 
 func main() {

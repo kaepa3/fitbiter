@@ -1,17 +1,27 @@
 // src/api/activityService.ts
 import { apiFetch } from './client';
 
-// 型定義（バックエンドの構造体に合わせる）
+// バックエンドの DailyActivity 構造体に対応
 export interface DailyActivity {
-  date: string;
+  id?: number;
+  date: string; // YYYY-MM-DD
   steps: number;
   calories: number;
+  distance: number;
+  heart_rate_rest: number;
+  sleep_minutes: number;
+  updated_at?: string;
 }
 
-// APIからのレスポンス型を定義（LSPの補完が効くようになります）
-interface AuthStatus {
-  is_authenticated: boolean
-  updated_at?: string
+// APIの認証ステータス用
+export interface AuthStatus {
+  is_authenticated: boolean;
+  updated_at?: string;
+}
+
+// 同期レスポンス用
+export interface SyncResponse {
+  status: string;
 }
 
 export const activityService = {
