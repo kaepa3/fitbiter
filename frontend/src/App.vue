@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import TheHeader from './components/TheHeader.vue'
 import ActivityChart from './components/ActivityChart.vue'
+import ActivitySearchForm from './components/ActivitySearchForm.vue'
 
 // APIからのレスポンス型を定義（LSPの補完が効くようになります）
 interface AuthStatus {
@@ -16,13 +18,36 @@ const isLoading = ref(true)
 // バックエンドのURL（Docker Compose環境に合わせて調整）
 const API_BASE_URL = 'http://localhost:8080'
 
+// デフォの日付
+const today = new Date()
+const lastWeek = new Date()
+lastWeek.setDate(today.getDate() - 7)
+// range の初期値としてセット
+const range = ref<[Date, Date]>([lastWeek, today])
+// range の変更を監視して、自動でフェッチ
+
+
+watch(range, (newRange) => {
+  console.log('Range changed:', newRange) // これがコンソールに出るか確認
+  if (newRange && newRange[0] && newRange[1]) {
+    fetchActivityData({
+      from: newRange[0].toISOString().split('T')[0],
+      to: newRange[1].toISOString().split('T')[0]
+    })
+  }
+}, { deep: true }) // 配列の中身の変化を検知するために deep 指定
+
+
 onMounted(async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/status`)
     if (!response.ok) throw new Error('Network response was not ok')
 
     const data: AuthStatus = await response.json()
-
+    fetchActivityData({
+      from: lastWeek.toISOString().split('T')[0],
+      to: today.toISOString().split('T')[0]
+    })
     // 取得したデータを反映
     isAuthenticated.value = data.is_authenticated
     if (data.updated_at) {
@@ -35,95 +60,47 @@ onMounted(async () => {
   }
 })
 
-// Fitbit連携を開始する関数
-const startAuthorize = () => {
-  // バックエンドのログインエンドポイントへリダイレクト
-  window.location.href = `${API_BASE_URL}/login`
-}
-const dateRange = ref({
-  from: new Date().toISOString().split('T')[0], // 今日をデフォルトに
-  to: new Date().toISOString().split('T')[0]
-})
-
+// 引数を受け取る形に変更
 const activityData = ref<any[]>([]) // 取得したデータを格納
-
-const fetchActivityData = async () => {
+const fetchActivityData = async (dataRange: { from: string; to: string }) => {
   isLoading.value = true
   try {
-    // クエリパラメータ付きでリクエスト (例: /api/activities?from=2026-04-01&to=2026-04-18)
-    const params = new URLSearchParams({
-      from: dateRange.value.from,
-      to: dateRange.value.to
-    })
-
+    const params = new URLSearchParams(dataRange)
     const response = await fetch(`${API_BASE_URL}/api/activities?${params}`)
     if (!response.ok) throw new Error('Failed to fetch activities')
 
     const data = await response.json()
-    activityData.value = data // 取得したデータを保持
-    console.log('Fetched data:', data)
+    activityData.value = data || []
   } catch (error) {
     console.error('Fetch error:', error)
   } finally {
     isLoading.value = false
-  } // ここにバックエンドのAPI（/api/activity 等）を叩く処理を追加していく
+  }
 }
-
 </script>
 
 <template>
-  <div class="p-8 font-sans">
-    <h1 class="text-2xl font-bold mb-4">Fitbiter Dashboard</h1>
+  <div class="min-h-screen bg-slate-950 text-slate-200 antialiased selection:bg-blue-500/30">
+    <TheHeader :is-authenticated="isAuthenticated" :last-updated="lastUpdated" />
 
-    <div v-if="isLoading" class="text-gray-500">
-      Loading status...
-    </div>
+    <main class="p-8 max-w-6xl mx-auto">
+      <template v-if="isAuthenticated">
+        <ActivitySearchForm :is-loading="isLoading" v-model="range" />
 
-    <div v-else>
-      <div class="flex items-center gap-2 mb-6">
-        <span :class="isAuthenticated ? 'bg-green-500' : 'bg-red-500'"
-          class="w-3 h-3 rounded-full animate-pulse"></span>
-        <span class="font-mono">
-          Status: {{ isAuthenticated ? 'CONNECTED' : 'DISCONNECTED' }}
-        </span>
-      </div>
+        <div class="relative mt-8 p-6 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl min-h-[400px]">
+          <h2 class="text-xl font-semibold mb-6 text-green-400">Activity Trend</h2>
 
-      <div v-if="!isAuthenticated">
-        <button @click="startAuthorize"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-lg transition">
-          Authorize with Fitbit
-        </button>
-      </div>
+          <div v-if="isLoading"
+            class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
+            <div class="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+          </div>
 
-      <div v-else class="text-sm text-gray-400">
-        Last synced: {{ lastUpdated }}
-      </div>
-    </div>
-    <div v-if="isAuthenticated" class="mt-8 p-6 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
-      <h2 class="text-xl font-semibold mb-6 text-blue-400">Activity Data Lookup</h2>
-
-      <div class="flex flex-col md:flex-row gap-6 items-end">
-        <div class="flex flex-col gap-2 w-full md:w-auto">
-          <label class="text-xs font-bold uppercase tracking-wider text-slate-400">From</label>
-          <input type="date" v-model="dateRange.from"
-            class="bg-slate-800 border border-slate-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition">
+          <ActivityChart v-if="activityData.length > 0" :data="activityData" />
+          <div v-else-if="!isLoading" class="text-slate-500 text-center py-20">
+            データを選択して Fetch を押してください
+          </div>
         </div>
-
-        <div class="flex flex-col gap-2 w-full md:w-auto">
-          <label class="text-xs font-bold uppercase tracking-wider text-slate-400">To</label>
-          <input type="date" v-model="dateRange.to"
-            class="bg-slate-800 border border-slate-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition">
-        </div>
-
-        <button @click="fetchActivityData"
-          class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform active:scale-95 transition">
-          Fetch Data
-        </button>
-      </div>
-    </div>
-    <div v-if="activityData.length > 0" class="mt-8 p-6 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
-      <h2 class="text-xl font-semibold mb-6 text-green-400">Activity Trend</h2>
-      <ActivityChart :data="activityData" />
-    </div>
+      </template>
+    </main>
   </div>
 </template>

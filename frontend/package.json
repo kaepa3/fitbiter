@@ -9,11 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vuepic/vue-datepicker": "^12.1.0",
     "chart.js": "^4.5.1",
     "vue": "^3.5.32",
     "vue-chartjs": "^5.3.3"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/tsconfig": "^0.9.1",
