@@ -1,65 +1,82 @@
 <script setup lang="ts">
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+    Chart as ChartJS,
+    Title, Tooltip, Legend,
+    LineElement, BarElement, PointElement,
+    CategoryScale, LinearScale,
+    LineController, BarController,
+    type ChartData, type ChartOptions // 型をインポート
 } from 'chart.js'
-import { Line } from 'vue-chartjs'
+import { Chart } from 'vue-chartjs'
 import { computed } from 'vue'
 
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+    Title, Tooltip, Legend,
+    LineElement, BarElement, PointElement,
+    CategoryScale, LinearScale,
+    LineController, BarController
 )
 
 const props = defineProps<{
-  data: any[]
+    data: any[]
 }>()
 
-// 届いたデータを Chart.js 用の形式に変換
-const chartData = computed(() => ({
-  labels: props.data.map(d => d.date),
-  datasets: [
-    {
-      label: 'Steps',
-      backgroundColor: '#3b82f6', // blue-500
-      borderColor: '#3b82f6',
-      data: props.data.map(d => d.steps),
-      tension: 0.3 // グラフを滑らかに
+// ChartData 型を明示。 'bar' | 'line' とすることで混合を許可
+const chartData = computed<ChartData<'bar' | 'line'>>(() => {
+    if (!props.data || props.data.length === 0) {
+        return { labels: [], datasets: [] }
     }
-  ]
-}))
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    y: {
-      beginAtZero: true,
-      grid: { color: '#334155' } // slate-700
-    },
-    x: {
-      grid: { display: false }
+    return {
+        labels: props.data.map(d => d.date),
+        datasets: [
+            {
+                type: 'bar' as const,
+                label: 'Steps',
+                data: props.data.map(d => d.steps),
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                yAxisID: 'y',
+            },
+            {
+                type: 'line' as const,
+                label: 'Heart Rate',
+                data: props.data.map(d => d.heart_rate_rest),
+                borderColor: '#f43f5e',
+                backgroundColor: '#f43f5e',
+                yAxisID: 'y1',
+                tension: 0.4,
+            }
+        ]
     }
-  },
-  plugins: {
-    legend: { labels: { color: '#f8fafc' } } // slate-50
-  }
+})
+
+// ChartOptions 型を明示
+const chartOptions: ChartOptions<'bar' | 'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+        y: {
+            type: 'linear' as const, // 文字列ではなく型を固定
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Steps' }
+        },
+        y1: {
+            type: 'linear' as const,
+            display: true,
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: 'BPM' },
+            suggestedMin: 40,
+            suggestedMax: 100
+        }
+    }
 }
 </script>
 
 <template>
-  <div class="h-64 md:h-96">
-    <Line :data="chartData" :options="chartOptions" />
-  </div>
+    <div class="h-[400px]">
+        <Chart v-if="chartData.labels && chartData.labels.length > 0" type="line" :data="chartData"
+            :options="chartOptions" />
+    </div>
 </template>
