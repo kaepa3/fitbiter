@@ -25,13 +25,12 @@ today.setHours(0, 0, 0, 0); // 時刻を 00:00:00 に固定
 const lastWeek = new Date()
 lastWeek.setDate(today.getDate() - 7)
 lastWeek.setHours(0, 0, 0, 0); // 時刻を 00:00:00 に固定
+
 // range の初期値としてセット
 const range = ref<[Date, Date]>([lastWeek, today])
+
 // range の変更を監視して、自動でフェッチ
-
-
 watch(range, (newRange) => {
-    console.log('Range changed:', newRange) // これがコンソールに出るか確認
     if (newRange && newRange[0] && newRange[1]) {
         fetchActivityData({
             from: newRange[0].toISOString().split('T')[0],

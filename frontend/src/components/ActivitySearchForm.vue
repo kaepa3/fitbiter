@@ -3,9 +3,9 @@ import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
 // 親コンポーネントへ「検索実行」を通知するための定義
-const modelValue = defineModel<[Date, Date]>()
+const range = defineModel<[Date, Date]>()
+
 defineProps<{
-    modelValue: [Date, Date]
     isLoading: boolean
 }>()
 const emit = defineEmits(['update:modelValue'])
@@ -23,8 +23,8 @@ const handleDateChange = (val: [Date, Date]) => {
             Select Period
         </label>
         <div class="relative">
-            <VueDatePicker :enable-time-picker="false" v-model="modelValue" range dark :auto-apply="true"
-                @update:model-value="handleDateChange" placeholder="Select Range" format="yyyy-MM-dd" />
+            <VueDatePicker :enable-time-picker="false" v-model="range" range dark :auto-apply="true"
+                @update:model-value="handleDateChange" placeholder="Select Range" format="yyyy/MM/dd" />
             <div v-if="isLoading" class="absolute -right-8 top-2">
                 <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
             </div>
