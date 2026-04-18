@@ -8,26 +8,34 @@ const range = defineModel<[Date, Date]>()
 defineProps<{
     isLoading: boolean
 }>()
-const emit = defineEmits(['update:modelValue'])
 
-
-const handleDateChange = (val: [Date, Date]) => {
-    emit('update:modelValue', val)
-}
-
+// 同期ボタン用のイベントだけを定義
+const emit = defineEmits<{
+    (e: 'fetch-today'): void
+}>()
 </script>
 
 <template>
     <div class="mt-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-sm mx-auto">
-        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 text-center">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 text-center">
             Select Period
         </label>
-        <div class="relative">
-            <VueDatePicker v-model="range" range dark :auto-apply="true" :time-config="{ enableTimePicker: false }"
-                :formats="{ input: 'yyyy/MM/dd' }" @update:model-value="handleDateChange" placeholder="Select Range" />
-            <div v-if="isLoading" class="absolute -right-8 top-2">
-                <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+
+        <div class="flex flex-col items-center gap-4 w-full">
+
+            <div class="w-full">
+                <VueDatePicker v-model="range" range dark :auto-apply="true" :time-config="{ enableTimePicker: false }"
+                    :formats="{ input: 'yyyy/MM/dd' }" placeholder="Select Range" />
             </div>
+
+            <button @click="emit('fetch-today')" :disabled="isLoading"
+                class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 text-white font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
+                <span v-if="!isLoading">Sync Today's Data</span>
+                <span v-else>Syncing...</span>
+
+                <div v-if="isLoading"
+                    class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+            </button>
         </div>
     </div>
 </template>

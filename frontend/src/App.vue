@@ -79,6 +79,19 @@ const fetchActivityData = async (dataRange: { from: string; to: string }) => {
         isLoading.value = false
     }
 }
+const handleSyncRequest = async () => {
+
+    isLoading.value = true;
+    try {
+        console.log("Sync request received in App.vue");
+
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        isLoading.value = false;
+    }
+};
 </script>
 
 <template>
@@ -87,7 +100,7 @@ const fetchActivityData = async (dataRange: { from: string; to: string }) => {
 
         <main class="p-8 max-w-6xl mx-auto">
             <template v-if="isAuthenticated">
-                <ActivitySearchForm :is-loading="isLoading" v-model="range" />
+                <ActivitySearchForm :is-loading="isLoading" v-model="range" @fetch-today="handleSyncRequest" />
 
                 <div class="relative mt-8 p-6 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl min-h-[400px]">
                     <h2 class="text-xl font-semibold mb-6 text-green-400">Activity Trend</h2>
