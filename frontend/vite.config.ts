@@ -13,7 +13,10 @@ export default defineConfig({
     port: 5173,
     // バックエンドへのプロキシ設定をしておくとCORSで悩みません
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': {
+		target:'http://backend:8080',
+		changeOrigin: true,
+	}
     }
   }
 })

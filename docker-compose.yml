@@ -23,8 +23,8 @@ services:
       - db
     ports:
       - "9000:8080"
-    env_file:
-      - .env
+    volumes:
+      - ./backend/.env:/app/.env
     environment:
       - DB_DSN=host=db user=user password=password dbname=fitbit_db port=5432 sslmode=disable
 
@@ -37,7 +37,6 @@ services:
     volumes:
       - ./frontend:/app             # コードの変更を反映させる
       - /app/node_modules           # ★重要: node_modulesをホストに書き出さない
-    environment:
-      - VITE_API_BASE_URL=http://localhost:9000
+      - ./frontend/.env:/app/.env
     depends_on:
       - backend
