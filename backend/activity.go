@@ -220,6 +220,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	app.DB.Where("date >= ? AND date <= ?", start, end).Find(&existingActivities)
 	for i := range existingActivities {
 		act := existingActivities[i]
+		act.SleepMinutes = 0
 		dailyMap[act.Date] = &act
 	}
 
