@@ -274,7 +274,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 			DoUpdates: clause.AssignmentColumns([]string{"steps", "calories", "heart_rate_rest", "sleep_minutes", "updated_at"}),
 		}).Create(&updateTargets).Error
 		if err != nil {
-			return 0, fmt.Errorf("期間データの一括保存失敗:", err)
+			return 0, fmt.Errorf("期間データの一括保存失敗:%v", err)
 		}
 	}
 	// 実際に保存・更新した日数を返す

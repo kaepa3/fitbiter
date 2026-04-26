@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"golang.org/x/oauth2"
 )
 
 // 複数データをまとめるための構造体
@@ -78,18 +76,18 @@ type FitbitSleepRangeResponse struct {
 
 // 自動でフェッチする
 func (app *App) startAutoFetch(ctx context.Context, auth FitbitAuth) {
-	ts := app.Conf.TokenSource(ctx, &oauth2.Token{
-		AccessToken:  auth.AccessToken,
-		RefreshToken: auth.RefreshToken,
-		Expiry:       auth.Expiry,
-	})
-
 	ticker := time.NewTicker(1 * time.Hour)
 	for {
 		select {
 		case <-ticker.C:
-			today := time.Now().Format("2006-01-02")
-			app.fetchOneDayData(ctx, ts, today)
+			ts, err := app.getAuthenticatedSource(ctx)
+			if err == nil {
+				start := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+				end := time.Now().Format("2006-01-02")
+				app.fetchRangeData(ctx, ts, start, end)
+			} else {
+				fmt.Println(err)
+			}
 		case <-ctx.Done():
 			return
 		}
