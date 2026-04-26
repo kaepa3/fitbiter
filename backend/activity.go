@@ -255,6 +255,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	for _, data := range sleepRes.Sleep {
 		if _, exists := dailyMap[data.DateOfSleep]; !exists {
 			dailyMap[data.DateOfSleep] = &DailyActivity{Date: data.DateOfSleep}
+			dailyMap[data.DateOfSleep].SleepMinutes = 0
 		}
 		dailyMap[data.DateOfSleep].SleepMinutes += data.MinutesAsleep
 	}
