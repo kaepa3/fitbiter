@@ -82,7 +82,7 @@ func (app *App) startAutoFetch(ctx context.Context, auth FitbitAuth) {
 		case <-ticker.C:
 			ts, err := app.getAuthenticatedSource(ctx)
 			if err == nil {
-				start := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+				start := time.Now().AddDate(0, 0, -2).Format("2006-01-02")
 				end := time.Now().Format("2006-01-02")
 				app.fetchRangeData(ctx, ts, start, end)
 			} else {
