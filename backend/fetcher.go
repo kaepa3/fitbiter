@@ -74,6 +74,15 @@ type FitbitSleepRangeResponse struct {
 	} `json:"sleep"`
 }
 
+// 体重とBMI
+type FitbitWeightRangeResponse struct {
+	Weight []struct {
+		BMI    float64 `json:"bmi"`
+		Date   string  `json:"date"`
+		Weight float64 `json:"weight"`
+	} `json:"weight"`
+}
+
 // 自動でフェッチする
 func (app *App) startAutoFetch(ctx context.Context, auth FitbitAuth) {
 	ticker := time.NewTicker(1 * time.Hour)

@@ -27,6 +27,8 @@ type DailyActivity struct {
 	Distance      float64   `json:"distance"`
 	HeartRateRest int       `json:"heart_rate_rest"`
 	SleepMinutes  int       `json:"sleep_minutes"`
+	Weight        float64   `gorm:"type:numeric"`
+	BMI           float64   `gorm:"type:numeric"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
