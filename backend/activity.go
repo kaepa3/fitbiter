@@ -266,15 +266,6 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 		dailyMap[data.DateOfSleep].SleepMinutes += data.MinutesAsleep
 	}
 
-	// APIで取れた体重をマップにマージ
-	for _, data := range weightRes.Weight {
-		if _, exists := dailyMap[data.Date]; !exists {
-			dailyMap[data.Date] = &DailyActivity{Date: data.Date}
-		}
-		dailyMap[data.Date].Weight = data.Weight
-		dailyMap[data.Date].BMI = data.BMI
-	}
-
 	// 6. マップのデータをスライス（配列）に変換
 	var updateTargets []DailyActivity
 	for _, act := range dailyMap {
