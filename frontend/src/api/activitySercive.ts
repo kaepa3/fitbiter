@@ -11,6 +11,7 @@ export interface DailyActivity {
   heart_rate_rest: number;
   sleep_minutes: number;
   updated_at?: string;
+  weight: number;
 }
 
 // APIの認証ステータス用

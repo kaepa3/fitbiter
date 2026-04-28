@@ -137,6 +137,13 @@ const execBulkSync = async () => {
                                     color="#818cf8" :is-sleep="true" />
                             </div>
 
+                            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+                                <h3 class="text-rose-400 text-sm font-black uppercase tracking-tighter mb-4">
+                                    Weight (kg)
+                                </h3>
+                                <SimpleBarChart :data="activityData" data-key="weight" label="kg" color="#fb7185" />
+                            </div>
+
                         </div>
                     </div>
                 </template>
