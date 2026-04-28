@@ -263,7 +263,13 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 			act.SleepMinutes = s.MinutesAsleep
 		}
 	}
-
+	// 取得した体重データを dailyMap に流し込む
+	for _, w := range weightRes.Weight {
+		if act, ok := dailyMap[w.Date]; ok {
+			act.Weight = w.Weight
+			log.Printf("[BULK] Set weight for %s: %.2f kg", w.Date, w.Weight)
+		}
+	}
 	// 6. マップのデータをスライス（配列）に変換
 	var updateTargets []DailyActivity
 	for _, act := range dailyMap {

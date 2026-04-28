@@ -28,6 +28,7 @@ type DailyActivity struct {
 	HeartRateRest int       `json:"heart_rate_rest"`
 	SleepMinutes  int       `json:"sleep_minutes"`
 	UpdatedAt     time.Time `json:"updated_at"`
+	Weight        float64   `json:"Weight"`
 }
 
 // DBの初期化
