@@ -112,7 +112,7 @@ func (a *App) syncTodayHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 2. 日付を日本時間に固定 (JST)
 	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
-	today := time.Now().In(jst).Format("2006-01-02")
+	today := time.Now().In(jst).AddDate(0, 0, 1).Format("2006-01-02")
 
 	// 3. fetchOneDayData の戻り値を確認するように変更（前述の error を返す修正とセット）
 	err = a.fetchOneDayData(ctx, ts, today)

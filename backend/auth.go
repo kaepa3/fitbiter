@@ -62,7 +62,8 @@ func (app *App) handleCallback(w http.ResponseWriter, r *http.Request) {
 	log.Println("【成功】新しいトークンを取得し、DB(ID:1)を更新しました。")
 
 	// 3. フロントエンド（Vite）へ戻す
-	http.Redirect(w, r, "http://localhost:5173", http.StatusTemporaryRedirect)
+	origin := os.Getenv("CORS_ALLOWED_ORIGIN")
+	http.Redirect(w, r, origin, http.StatusTemporaryRedirect)
 }
 
 func (a *App) getAuthStatus(w http.ResponseWriter, r *http.Request) {
