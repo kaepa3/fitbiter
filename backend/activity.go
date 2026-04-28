@@ -211,6 +211,11 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	if err := fetchFitbitAPI(client, sleepURL, &sleepRes); err != nil {
 		return 0, fmt.Errorf("睡眠期間データの取得失敗: %v", err)
 	}
+	weightURL := fmt.Sprintf("https://api.fitbit.com/1/user/-/body/log/weight/date/%s/%s.json", start, end)
+	var weightRes FitbitWeightRangeResponse
+	if err := fetchFitbitAPI(client, weightURL, &weightRes); err != nil {
+		return 0, fmt.Errorf("体重データの取得失敗: %v", err)
+	}
 
 	// 3. データを日付ごとに整理するためのマップを作成
 	dailyMap := make(map[string]*DailyActivity)
@@ -220,6 +225,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	app.DB.Where("date >= ? AND date <= ?", start, end).Find(&existingActivities)
 	for i := range existingActivities {
 		act := existingActivities[i]
+		act.SleepMinutes = 0
 		dailyMap[act.Date] = &act
 	}
 
@@ -255,9 +261,11 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	for _, data := range sleepRes.Sleep {
 		if _, exists := dailyMap[data.DateOfSleep]; !exists {
 			dailyMap[data.DateOfSleep] = &DailyActivity{Date: data.DateOfSleep}
+			dailyMap[data.DateOfSleep].SleepMinutes = 0
 		}
 		dailyMap[data.DateOfSleep].SleepMinutes += data.MinutesAsleep
 	}
+
 	// 6. マップのデータをスライス（配列）に変換
 	var updateTargets []DailyActivity
 	for _, act := range dailyMap {
@@ -272,7 +280,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 			DoUpdates: clause.AssignmentColumns([]string{"steps", "calories", "heart_rate_rest", "sleep_minutes", "updated_at"}),
 		}).Create(&updateTargets).Error
 		if err != nil {
-			return 0, fmt.Errorf("期間データの一括保存失敗:", err)
+			return 0, fmt.Errorf("期間データの一括保存失敗:%v", err)
 		}
 	}
 	// 実際に保存・更新した日数を返す
