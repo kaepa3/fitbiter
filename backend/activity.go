@@ -183,7 +183,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	// 全ての日付がすでに存在していれば、APIを叩かずに終了
 	// 30日分すべて揃っているかチェック（簡略化のため件数で比較）
 	if len(existingDates) >= 31 { // 30日+α
-		return 0, nil
+		// return 0, nil
 	}
 
 	// 1. 歩数（Steps）の取得
