@@ -267,7 +267,6 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	for _, w := range weightRes.Weight {
 		if act, ok := dailyMap[w.Date]; ok {
 			act.Weight = w.Weight
-			log.Printf("[BULK] Set weight for %s: %.2f kg", w.Date, w.Weight)
 		}
 	}
 
