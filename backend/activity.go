@@ -93,7 +93,6 @@ func (a *App) syncAllHistoryHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Fitbit APIのレートリミットを考慮し、少し待機を入れるとより安全
 		time.Sleep(500 * time.Millisecond)
-		break
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -183,7 +182,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	// 全ての日付がすでに存在していれば、APIを叩かずに終了
 	// 30日分すべて揃っているかチェック（簡略化のため件数で比較）
 	if len(existingDates) >= 31 { // 30日+α
-		// return 0, nil
+		return 0, nil
 	}
 
 	// 1. 歩数（Steps）の取得
@@ -261,8 +260,6 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	// APIで取れた睡眠をマップにマージ（昼寝などで複数回ある場合は加算）
 	for _, s := range sleepRes.Sleep {
 		if act, ok := dailyMap[s.DateOfSleep]; ok {
-			// ログで確認
-			log.Printf("[CONFIRM] Date: %s, Minutes: %d", s.DateOfSleep, s.MinutesAsleep)
 			act.SleepMinutes = s.MinutesAsleep
 		}
 	}
