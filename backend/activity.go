@@ -93,6 +93,7 @@ func (a *App) syncAllHistoryHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Fitbit APIのレートリミットを考慮し、少し待機を入れるとより安全
 		time.Sleep(500 * time.Millisecond)
+		break
 	}
 
 	w.Header().Set("Content-Type", "application/json")
