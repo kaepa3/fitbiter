@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -115,14 +113,6 @@ func fetchFitbitAPI(client *http.Client, url string, target interface{}) error {
 		return fmt.Errorf("通信エラー: %w", err)
 	}
 	defer resp.Body.Close()
-	// --- ここで先に読み込む ---
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("レスポンス読み込み失敗: %w", err)
-	}
-
-	// ステータスコードに関わらず、中身を一旦ログに出す
-	log.Printf("[DEBUG] Raw Response from %s (Status: %d):\n%s", url, resp.StatusCode, string(body))
 	// 🚨 必須チェック: 200 OK 以外は弾く
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusTooManyRequests { // 429エラー
@@ -134,11 +124,7 @@ func fetchFitbitAPI(client *http.Client, url string, target interface{}) error {
 	}
 
 	// 成功時のみJSONをデコード（ポインタを渡して書き込んでもらう）
-	//	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
-	//		return fmt.Errorf("JSONパース失敗: %w", err)
-	//	}
-	// デコード用に詰め直す
-	if err := json.Unmarshal(body, target); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
 		return fmt.Errorf("JSONパース失敗: %w", err)
 	}
 

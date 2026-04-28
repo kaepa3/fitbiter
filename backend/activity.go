@@ -261,8 +261,9 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	// APIで取れた睡眠をマップにマージ（昼寝などで複数回ある場合は加算）
 	for _, s := range sleepRes.Sleep {
 		if act, ok := dailyMap[s.DateOfSleep]; ok {
+			// ログで確認
+			log.Printf("[CONFIRM] Date: %s, Minutes: %d", s.DateOfSleep, s.MinutesAsleep)
 			act.SleepMinutes = s.MinutesAsleep
-			log.Printf("[BULK] Date: %s, Sleep: % d min", s.DateOfSleep, s.MinutesAsleep)
 		}
 	}
 
