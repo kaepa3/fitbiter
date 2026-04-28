@@ -18,6 +18,11 @@ type FitbitSummary struct {
 
 // 睡眠データ用
 type FitbitSleepResponse struct {
+	Sleep []struct {
+		Duration      int    `json:"duration"`      // ミリ秒
+		MinutesAsleep int    `json:"minutesAsleep"` // 分
+		DateOfSleep   string `json:"dateOfSleep"`
+	} `json:"sleep"`
 	Summary struct {
 		TotalMinutesAsleep int `json:"totalMinutesAsleep"`
 	} `json:"summary"`
@@ -148,12 +153,14 @@ func getDayStepCalorie(client *http.Client, date string) (err error, steps int, 
 
 // 睡眠の情報を取得
 func getDaySleep(client *http.Client, date string) (err error, sleep int) {
+	// 安定している v1.2 を使用し、Summary の合計値を採用
 	url := fmt.Sprintf("https://api.fitbit.com/1.2/user/-/sleep/date/%s.json", date)
 	var res FitbitSleepResponse
 	if err := fetchFitbitAPI(client, url, &res); err != nil {
-		return err, 0 // 失敗した時はエラーだけを返す
+		return err, 0
 	}
-	return err, sleep
+	// Summaryから合計分を返す
+	return nil, res.Summary.TotalMinutesAsleep
 }
 
 // 安静時心拍数を取得
