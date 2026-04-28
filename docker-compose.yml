@@ -27,6 +27,9 @@ services:
       - ./backend/.env:/app/.env
     environment:
       - DB_DSN=host=db user=user password=password dbname=fitbit_db port=5432 sslmode=disable
+    networks:
+      - default
+      - frontend-network 
 
   frontend:
     build:
@@ -40,3 +43,10 @@ services:
       - ./frontend/.env:/app/.env
     depends_on:
       - backend
+    networks:
+      - default
+      - frontend-network 
+
+networks:
+  frontend-network:
+    external: true
