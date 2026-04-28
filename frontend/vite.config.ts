@@ -11,6 +11,11 @@ export default defineConfig({
   server: {
     host: true, // Dockerコンテナ外からのアクセスを許可
     port: 5173,
+    hmr: {
+      host: 'fitbit.local',
+      protocol: 'wss', // HTTPS経由なので wss を指定
+      clientPort: 443, // ブラウザからはNPMの443番(HTTPS)経由で見ているため
+    },
     // バックエンドへのプロキシ設定をしておくとCORSで悩みません
     proxy: {
       '/api': {
