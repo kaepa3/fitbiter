@@ -205,8 +205,8 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 		return 0, fmt.Errorf("心拍数期間データの取得失敗: %v", err)
 	}
 
-	// 4. 睡眠の取得 (バージョン1.2)
-	sleepURL := fmt.Sprintf("https://api.fitbit.com/1.2/user/-/sleep/date/%s/%s.json", start, end)
+	// 4. 睡眠の取得 (バージョン1)
+	sleepURL := fmt.Sprintf("https://api.fitbit.com/1/user/-/sleep/date/%s/%s.json", start, end)
 	var sleepRes FitbitSleepRangeResponse
 	if err := fetchFitbitAPI(client, sleepURL, &sleepRes); err != nil {
 		return 0, fmt.Errorf("睡眠期間データの取得失敗: %v", err)
@@ -258,12 +258,11 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 	}
 
 	// APIで取れた睡眠をマップにマージ（昼寝などで複数回ある場合は加算）
-	for _, data := range sleepRes.Sleep {
-		if _, exists := dailyMap[data.DateOfSleep]; !exists {
-			dailyMap[data.DateOfSleep] = &DailyActivity{Date: data.DateOfSleep}
-			dailyMap[data.DateOfSleep].SleepMinutes = 0
+	for _, s := range sleepRes.Sleep {
+		if act, ok := dailyMap[s.DateOfSleep]; ok {
+			act.SleepMinutes = s.MinutesAsleep
+			log.Printf("[BULK] Date: %s, Sleep: % d min", s.DateOfSleep, s.MinutesAsleep)
 		}
-		dailyMap[data.DateOfSleep].SleepMinutes += data.MinutesAsleep
 	}
 
 	// 6. マップのデータをスライス（配列）に変換
