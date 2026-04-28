@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import TheHeader from './components/TheHeader.vue'
-import ActivityChart from './components/ActivityChart.vue'
 import ActivitySearchForm from './components/ActivitySearchForm.vue'
+import ActivityChart from './components/ActivityChart.vue'
 import SimpleBarChart from './components/SimpleBarChart.vue'
+import BaseChart from './components/BaseChart.vue'
 import { activityService, type DailyActivity } from './api/activitySercive.ts'
-
+import { computed } from 'vue';
 
 // 状態管理用のリアクティブ変数
 const isAuthenticated = ref(false)
@@ -98,6 +99,52 @@ const execBulkSync = async () => {
         isBulkSyncing.value = false
     }
 }
+
+// 共通のベースオプション（ここでデザインを一括管理！）
+const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { labels: { color: '#94a3b8' } } // tailwind slate-400
+    }
+};
+
+// 睡眠グラフ用のデータとオプション
+const sleepChartData = computed(() => ({
+    labels: activityData.value.map(d => d.date),
+    datasets: [{
+        label: 'Sleep (Hours)',
+        data: activityData.value.map(d => (d.sleep_minutes / 60).toFixed(1)),
+        backgroundColor: '#818cf8',
+        borderRadius: 4
+    }]
+}));
+
+const sleepChartOptions = computed(() => ({
+    ...baseOptions,
+    scales: { y: { beginAtZero: true } }
+}));
+
+// 先ほどの「カロリー＆体重」複合グラフ用
+const composedChartData = computed(() => ({
+    labels: activityData.value.map(d => d.date),
+    datasets: [
+        {
+            type: 'bar',
+            label: 'Calories',
+            data: activityData.value.map(d => d.calories),
+            backgroundColor: '#fbbf24',
+            yAxisID: 'y-cal'
+        },
+        {
+            type: 'line',
+            label: 'Weight',
+            data: activityData.value.map(d => d.weight),
+            borderColor: '#fb7185',
+            yAxisID: 'y-weight'
+        }
+    ]
+}));
 </script>
 
 <template>
@@ -143,7 +190,21 @@ const execBulkSync = async () => {
                                 </h3>
                                 <SimpleBarChart :data="activityData" data-key="weight" label="kg" color="#fb7185" />
                             </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                                <!-- 睡眠グラフ -->
+                                <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+                                    <h3 class="text-indigo-400 mb-4">Sleep (Hours)</h3>
+                                    <BaseChart type="bar" :chartData="sleepChartData"
+                                        :chartOptions="sleepChartOptions" />
+                                </div>
 
+                                <!-- 複合グラフ -->
+                                <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+                                    <h3 class="text-amber-400 mb-4">Calories & Weight</h3>
+                                    <BaseChart type="bar" :chartData="composedChartData"
+                                        :chartOptions="composedOptions" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </template>
