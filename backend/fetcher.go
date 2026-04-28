@@ -160,6 +160,31 @@ func getDaySleep(client *http.Client, date string) (err error, sleep int) {
 	return nil, res.Summary.TotalMinutesAsleep
 }
 
+// 1日の体重データを取得する関数
+func getDayWeight(client *http.Client, date string) (error, float64) {
+	// 期間ではなく 1日指定 のURL
+	weightURL := fmt.Sprintf("https://api.fitbit.com/1/user/-/body/log/weight/date/%s.json", date)
+
+	var weightRes struct {
+		Weight []struct {
+			Weight float64 `json:"weight"`
+		} `json:"weight"`
+	}
+
+	if err := fetchFitbitAPI(client, weightURL, &weightRes); err != nil {
+		return err, 0
+	}
+
+	// データが存在すれば返す（1日に複数回測った場合は最新のものを採用）
+	if len(weightRes.Weight) > 0 {
+		latestWeight := weightRes.Weight[len(weightRes.Weight)-1].Weight
+		return nil, latestWeight
+	}
+
+	// 記録がない日は 0 を返す
+	return nil, 0
+}
+
 // 安静時心拍数を取得
 func getDayHeartRateRest(client *http.Client, date string) (err error, rest int) {
 	url := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%s/1d.json", date)

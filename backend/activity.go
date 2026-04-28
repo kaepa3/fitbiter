@@ -159,6 +159,15 @@ func (app *App) fetchOneDayData(ctx context.Context, ts oauth2.TokenSource, date
 		return fmt.Errorf("[%s] 睡眠取得失敗: %v\n", date, err)
 	}
 
+	// 4. 【追加】体重データ 取得
+	err, weight := getDayWeight(client, date)
+	if err == nil && weight > 0 {
+		activity.Weight = weight
+	} else if err != nil {
+		// 体重は取れない日もあるため、エラーで止めずにログだけ出す
+		log.Printf("[%s] 体重取得失敗または記録なし: %v\n", date, err)
+	}
+
 	// 3. DBへ保存（Saveを使用）
 	// GORMの Save は、IDが存在すればUpdate、なければInsertを自動で判別してくれます
 	if err := app.DB.Save(&activity).Error; err != nil {
