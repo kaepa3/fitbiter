@@ -3,7 +3,6 @@ import { ref, watch, onMounted } from 'vue'
 import TheHeader from './components/TheHeader.vue'
 import ActivitySearchForm from './components/ActivitySearchForm.vue'
 import ActivityChart from './components/ActivityChart.vue'
-import SimpleBarChart from './components/SimpleBarChart.vue'
 import BaseChart from './components/BaseChart.vue'
 import { activityService, type DailyActivity } from './api/activitySercive.ts'
 import { computed } from 'vue';
@@ -151,7 +150,7 @@ const composedChartData = computed(() => ({
             data: activityData.value.map(d => d.calories),
             backgroundColor: '#fbbf24',
             yAxisID: 'y-cal',
-order:2
+            order: 2
         },
         {
             type: 'line',
@@ -159,7 +158,7 @@ order:2
             data: activityData.value.map(d => d.weight),
             borderColor: '#fb7185',
             yAxisID: 'y-weight',
-order:1
+            order: 1
         }
     ]
 }));
@@ -186,21 +185,20 @@ order:1
                         </div>
 
                         <ActivityChart v-if="activityData.length > 0" :data="activityData" />
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-                                <!-- 睡眠グラフ -->
-                                <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-                                    <h3 class="text-indigo-400 mb-4">Sleep (Hours)</h3>
-                                    <BaseChart type="bar" :chartData="sleepChartData"
-                                        :chartOptions="sleepChartOptions" />
-                                </div>
-
-                                <!-- 複合グラフ -->
-                                <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-                                    <h3 class="text-amber-400 mb-4">Calories & Weight</h3>
-                                    <BaseChart type="bar" :chartData="composedChartData"
-                                        :chartOptions="composedChartOptions" />
-                                </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                            <!-- 睡眠グラフ -->
+                            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+                                <h3 class="text-indigo-400 mb-4">Sleep (Hours)</h3>
+                                <BaseChart type="bar" :chartData="sleepChartData" :chartOptions="sleepChartOptions" />
                             </div>
+
+                            <!-- 複合グラフ -->
+                            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+                                <h3 class="text-amber-400 mb-4">Calories & Weight</h3>
+                                <BaseChart type="bar" :chartData="composedChartData"
+                                    :chartOptions="composedChartOptions" />
+                            </div>
+                        </div>
                     </div>
                 </template>
             </main>
