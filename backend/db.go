@@ -28,7 +28,7 @@ type DailyActivity struct {
 	HeartRateRest int       `json:"heart_rate_rest"`
 	SleepMinutes  int       `json:"sleep_minutes"`
 	UpdatedAt     time.Time `json:"updated_at"`
-	Weight        float64   `json:"Weight"`
+	Weight        float64   `gorm:"column:weight" json:"weight"`
 }
 
 // DBの初期化
