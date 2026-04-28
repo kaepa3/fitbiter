@@ -14,9 +14,13 @@ export default defineConfig({
     // バックエンドへのプロキシ設定をしておくとCORSで悩みません
     proxy: {
       '/api': {
-		target:'http://backend:8080',
-		changeOrigin: true,
-	}
-    }
+        target: 'http://backend:8080',
+        changeOrigin: true,
+      }
+    },
+    allowedHosts: [
+      'fitbit.local',
+      'api-fitbit.local' // 一応バックエンド側の名前も入れておくと安心
+    ],
   }
 })
