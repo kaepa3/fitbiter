@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -116,17 +113,6 @@ func fetchFitbitAPI(client *http.Client, url string, target interface{}) error {
 		return fmt.Errorf("通信エラー: %w", err)
 	}
 	defer resp.Body.Close()
-	// --- ここから追加：生のレスポンスをログに出す ---
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("レスポンス読み込み失敗: %w", err)
-	}
-	// ログに出力
-	log.Printf("[DEBUG] Raw Response from %s:\n%s", url, string(body))
-
-	// resp.Body は一度読むと空になるので、デコード用に詰め直す
-	resp.Body = io.NopCloser(bytes.NewBuffer(body))
-	// --- ここまで追加 ---
 	// 🚨 必須チェック: 200 OK 以外は弾く
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusTooManyRequests { // 429エラー
