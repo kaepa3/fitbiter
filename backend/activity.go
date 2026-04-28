@@ -270,6 +270,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 			log.Printf("[BULK] Set weight for %s: %.2f kg", w.Date, w.Weight)
 		}
 	}
+
 	// 6. マップのデータをスライス（配列）に変換
 	var updateTargets []DailyActivity
 	for _, act := range dailyMap {
@@ -281,7 +282,7 @@ func (app *App) fetchRangeData(ctx context.Context, ts oauth2.TokenSource, start
 		err := app.DB.Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "date"}},
 			// 更新対象に heart_rate_rest と sleep_minutes を追加
-			DoUpdates: clause.AssignmentColumns([]string{"steps", "calories", "heart_rate_rest", "sleep_minutes", "updated_at"}),
+			DoUpdates: clause.AssignmentColumns([]string{"steps", "calories", "distance", "heart_rate_rest", "sleep_minutes", "weight", "updated_at"}),
 		}).Create(&updateTargets).Error
 		if err != nil {
 			return 0, fmt.Errorf("期間データの一括保存失敗:%v", err)
