@@ -150,14 +150,16 @@ const composedChartData = computed(() => ({
             label: 'Calories',
             data: activityData.value.map(d => d.calories),
             backgroundColor: '#fbbf24',
-            yAxisID: 'y-cal'
+            yAxisID: 'y-cal',
+order:2
         },
         {
             type: 'line',
             label: 'Weight',
             data: activityData.value.map(d => d.weight),
             borderColor: '#fb7185',
-            yAxisID: 'y-weight'
+            yAxisID: 'y-weight',
+order:1
         }
     ]
 }));
@@ -184,30 +186,6 @@ const composedChartData = computed(() => ({
                         </div>
 
                         <ActivityChart v-if="activityData.length > 0" :data="activityData" />
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-
-                            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-                                <h3 class="text-amber-400 text-sm font-black uppercase tracking-tighter mb-4">Calories
-                                </h3>
-                                <SimpleBarChart :data="activityData" data-key="calories" label="kcal" color="#fbbf24" />
-                            </div>
-
-                            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-                                <h3 class="text-indigo-400 text-sm font-black uppercase tracking-tighter mb-4">Sleep
-                                    (Hours)
-                                </h3>
-                                <SimpleBarChart :data="activityData" data-key="sleep_minutes" label="hours"
-                                    color="#818cf8" :is-sleep="true" />
-                            </div>
-
-                            <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-                                <h3 class="text-rose-400 text-sm font-black uppercase tracking-tighter mb-4">
-                                    Weight (kg)
-                                </h3>
-                                <SimpleBarChart :data="activityData" data-key="weight" label="kg" color="#fb7185" />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
                                 <!-- 睡眠グラフ -->
                                 <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
@@ -223,7 +201,6 @@ const composedChartData = computed(() => ({
                                         :chartOptions="composedChartOptions" />
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </template>
             </main>

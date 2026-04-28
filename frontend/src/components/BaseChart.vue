@@ -33,7 +33,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="relative h-full w-full min-h-[300px]">
+  <div class="relative h-[300px] w-full min-h-[300px]">
     <!-- 複合グラフでも大元は Bar コンポーネントを使えばOKです -->
     <Bar :data="chartData" :options="chartOptions" />
   </div>
