@@ -108,7 +108,23 @@ const baseOptions = {
         legend: { labels: { color: '#94a3b8' } } // tailwind slate-400
     }
 };
-
+const composedChartOptions = computed(() => ({
+  ...baseOptions,
+  scales: {
+    'y-cal': {
+      type: 'linear',
+      position: 'left',
+      title: { display: true, text: 'kcal', color: '#fbbf24' }
+    },
+    'y-weight': {
+      type: 'linear',
+      position: 'right',
+      beginAtZero: false, // 体重は0から始めない
+      grid: { drawOnChartArea: false }, // 右軸のグリッド線を消してスッキリさせる
+      title: { display: true, text: 'kg', color: '#fb7185' }
+    }
+  }
+}));
 // 睡眠グラフ用のデータとオプション
 const sleepChartData = computed(() => ({
     labels: activityData.value.map(d => d.date),
@@ -190,6 +206,8 @@ const composedChartData = computed(() => ({
                                 </h3>
                                 <SimpleBarChart :data="activityData" data-key="weight" label="kg" color="#fb7185" />
                             </div>
+</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
                                 <!-- 睡眠グラフ -->
                                 <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
@@ -202,10 +220,9 @@ const composedChartData = computed(() => ({
                                 <div class="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
                                     <h3 class="text-amber-400 mb-4">Calories & Weight</h3>
                                     <BaseChart type="bar" :chartData="composedChartData"
-                                        :chartOptions="composedOptions" />
+                                        :chartOptions="composedChartOptions" />
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </template>
             </main>
